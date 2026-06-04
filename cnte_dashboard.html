@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mexico City — CNTE Protest Monitoring Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3f4f6;
+    --surface: #ffffff;
+    --surface2: #f9fafb;
+    --border: #e5e7eb;
+    --border2: #d1d5db;
+    --text: #111827;
+    --text-sec: #374151;
+    --text-muted: #6b7280;
+    --text-faint: #9ca3af;
+    --high: #c0392b;
+    --high-bg: rgba(192,57,43,0.08);
+    --high-border: rgba(192,57,43,0.25);
+    --elev: #b5690a;
+    --elev-bg: rgba(181,105,10,0.08);
+    --elev-border: rgba(181,105,10,0.25);
+    --info: #1a6aad;
+    --info-bg: rgba(26,106,173,0.08);
+    --info-border: rgba(26,106,173,0.25);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13.5px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 1.5rem 1rem 3rem;
+  }
+  .container { max-width: 1100px; margin: 0 auto; width: 100%; }
+
+  /* HEADER */
+  .header { border-bottom: 1px solid var(--border2); padding-bottom: 1.25rem; margin-bottom: 1.5rem; }
+  .dash-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .dash-subtitle { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+
+  /* BADGES */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 500;
+    padding: 3px 10px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  .badge-high  { background: var(--high-bg); color: var(--high); border: 1px solid var(--high-border); }
+  .badge-elev  { background: var(--elev-bg); color: var(--elev); border: 1px solid var(--elev-border); }
+  .badge-info  { background: var(--info-bg); color: var(--info); border: 1px solid var(--info-border); }
+  .badge-det   { background: rgba(192,57,43,0.06); color: #a0382c; border: 1px solid rgba(192,57,43,0.18); }
+  .badge-sdet  { background: rgba(181,105,10,0.06); color: #8a5a0a; border: 1px solid rgba(181,105,10,0.18); }
+  .badge-nochg { background: #f3f4f6; color: #374151; border: 1px solid var(--border); }
+
+  .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dot-high { background: var(--high); animation: pulse 2.2s ease-in-out infinite; }
+  .dot-elev { background: var(--elev); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+
+  /* SECTIONS */
+  .section { margin-bottom: 1.25rem; animation: fadeUp 0.35s ease both; }
+  .section:nth-child(1) { animation-delay: 0.00s; }
+  .section:nth-child(2) { animation-delay: 0.06s; }
+  .section:nth-child(3) { animation-delay: 0.12s; }
+  .section:nth-child(4) { animation-delay: 0.18s; }
+  .section:nth-child(5) { animation-delay: 0.22s; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
+
+  .sec-label {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; padding: 0 2px;
+  }
+
+  /* CARD */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+
+  /* KEY INSIGHTS */
+  .insights-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--high); border-radius: 6px;
+  }
+  .insights-status {
+    display: flex; gap: 1.5rem; align-items: center;
+    padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .insights-status-row { display: flex; align-items: center; gap: 8px; }
+  .insights-status-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+  .exec-table { width: 100%; border-collapse: collapse; }
+  .exec-table tr { border-bottom: 1px solid var(--border); }
+  .exec-table tr:last-child { border-bottom: none; }
+  .exec-table td { padding: 0.75rem 1.1rem; vertical-align: top; }
+  .exec-table td.exec-lbl {
+    width: 140px; font-weight: 600; color: var(--text-muted);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    white-space: nowrap; padding-top: 0.85rem;
+  }
+  .exec-table td.exec-content { font-size: 13px; color: var(--text-sec); line-height: 1.5; }
+  .exec-bullets { list-style: none; display: flex; flex-direction: column; gap: 4px; padding: 0; margin: 0; }
+  .exec-bullets li { padding-left: 12px; position: relative; line-height: 1.5; }
+  .exec-bullets li::before { content: "•"; position: absolute; left: 0; color: var(--text-muted); }
+
+  /* INDICATOR TABLE */
+  .ind-table { width: 100%; border-collapse: collapse; }
+  .ind-table thead tr { background: var(--surface2); border-bottom: 1px solid var(--border2); }
+  .ind-table th {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-align: left; padding: 8px 12px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .ind-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .ind-table tbody tr:last-child td { border-bottom: none; }
+  .ind-table tbody tr:hover { background: var(--surface2); }
+  .ind-name { font-weight: 500; font-size: 13px; color: var(--text); margin-bottom: 0; }
+  .ind-sub { display: none; }
+  .ind-summary { font-size: 13px; color: var(--text-sec); line-height: 1.6; }
+
+  /* WATCHPOINTS */
+  .wp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; }
+  .wp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; }
+  .wp-num { font-size: 11px; font-weight: 600; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+  .wp-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .wp-body { font-size: 12px; color: var(--text-sec); line-height: 1.6; }
+
+  /* CONFIDENCE */
+  .conf-inner { padding: 0.9rem 1.1rem; }
+  .conf-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.65rem; }
+  .conf-label { font-size: 12px; color: var(--text-muted); font-weight: 500; min-width: 130px; }
+  .conf-body { font-size: 13px; color: var(--text-sec); line-height: 1.65; }
+  .conf-body + .conf-body { margin-top: 0.5rem; }
+
+  hr.div { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+  .footer {
+    margin-top: 2rem; padding-top: 0.75rem; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-faint);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;
+  }
+
+  @media (max-width: 600px) {
+    .ind-table thead { display: none; }
+    .ind-table td { display: block; padding: 6px 12px; }
+    .ind-table tr { display: block; border-bottom: 1px solid var(--border); padding: 8px 0; }
+    .ind-table tbody tr:last-child { border-bottom: none; }
+    .wp-grid { grid-template-columns: 1fr; }
+    .insights-status { flex-direction: column; gap: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="dash-title">Mexico City — CNTE Protest Monitoring</div>
+    <div class="dash-subtitle">Updated: 4 June 2026 &nbsp;·&nbsp; Reporting period: 28 May – 4 June 2026</div>
+  </div>
+
+  <!-- KEY INSIGHTS -->
+  <div class="section">
+    <div class="sec-label">Key Insights</div>
+    <div class="insights-card">
+
+      <table class="exec-table">
+        <tr>
+          <td class="exec-lbl">Current Situation</td>
+          <td class="exec-content">
+            <ul class="exec-bullets">
+              <li>Protest tactics have escalated — clashes, vandalism, and a SEP compound breach within 72 hours — but violence remains organised and <strong>contained to government sites, not commercial zones</strong>.</li>
+              <li><strong>Recurring blockades of Circuito Interior and Reforma–Chapultepec have directly impaired access to Torre Virreyes on five days</strong> across the reporting period.</li>
+              <li>Flights at AICM remain operational.</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td class="exec-lbl">Key Changes</td>
+          <td class="exec-content">
+            <ul class="exec-bullets">
+              <li><strong>CNTE declared dialogue over on June 3</strong> after Gobernación talks failed.</li>
+              <li>Tactics escalated in 72 hours from marches to barrier breaches (SEP), vandalism, and police clashes with injuries.</li>
+              <li>FIFA World Cup opening (June 11) gives CNTE a <strong>hard tactical deadline</strong> — conditions for further escalation are structurally in place.</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td class="exec-lbl">Key Implications</td>
+          <td class="exec-content">
+            <ul class="exec-bullets">
+              <li>Staff on Reforma/Circuito Interior commute routes face <strong>unpredictable daily disruption</strong>.</li>
+              <li><strong>No reasonable expectation of normalisation before June 11.</strong></li>
+              <li>Journey management protocols should be active now.</li>
+            </ul>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <hr class="div">
+
+  <!-- INDICATOR SUMMARY -->
+  <div class="section">
+    <div class="sec-label">Indicator Summary</div>
+    <div class="card">
+      <table class="ind-table">
+        <thead>
+          <tr>
+            <th style="width:18%">Indicator</th>
+            <th style="width:10%">Status</th>
+            <th style="width:14%">Trend</th>
+            <th>Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="ind-name">CBD Operations</div>
+              <div class="ind-sub">Torre Virreyes · Reforma · Circuito Interior · Traffic</div>
+            </td>
+            <td><span class="badge badge-high"><span class="dot dot-high"></span>&nbsp;High</span></td>
+            <td><span class="badge badge-det">↘ Deteriorating</span></td>
+            <td class="ind-summary">Circuito Interior at Reforma–Chapultepec — primary access to Torre Virreyes — blocked on five consecutive reporting days. AICM road access disruption also sits here. Polanco and Santa Fe face corridor friction but remain accessible.</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="ind-name">Airport Operations</div>
+              <div class="ind-sub">AICM flights · Terminals · Airside ops</div>
+            </td>
+            <td><span class="badge badge-elev"><span class="dot dot-elev"></span>&nbsp;Elevated</span></td>
+            <td><span class="badge badge-nochg">→ No Change</span></td>
+            <td class="ind-summary">Flights and terminal operations are normal. AICM has issued precautionary advisories but no airside disruption has occurred. Elevated reflects CNTE's stated intent to target the World Cup window.</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="ind-name">Civil Unrest & Violence</div>
+              <div class="ind-sub">Clashes · Injuries · Vandalism · Safety</div>
+            </td>
+            <td><span class="badge badge-elev"><span class="dot dot-elev"></span>&nbsp;Elevated</span></td>
+            <td><span class="badge badge-sdet">↘ Slightly Deteriorating</span></td>
+            <td class="ind-summary">Three escalation events in 72 hours: Zócalo clashes (June 1), Reforma statue destruction (June 2), SEP breach with injuries and tear gas (June 3). Violence is organised and targeted at government sites — not commercial zones.</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="ind-name">Escalation Potential</div>
+              <div class="ind-sub">Negotiations · World Cup · Strike durability</div>
+            </td>
+            <td><span class="badge badge-high"><span class="dot dot-high"></span>&nbsp;High</span></td>
+            <td><span class="badge badge-det">↘ Deteriorating</span></td>
+            <td class="ind-summary">Dialogue declared over by CNTE on June 3. Indefinite strike holds with state reinforcements ongoing. World Cup June 11 is a hard escalation deadline. Core demands remain structurally unresolvable in the near term.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="div">
+
+  <!-- WATCHPOINTS -->
+  <div class="section">
+    <div class="sec-label">Forward Watchpoints — Next 7–14 Days</div>
+    <div class="wp-grid">
+      <div class="wp-card">
+        <div class="wp-num">Watchpoint 1</div>
+        <div class="wp-title">Presidential dialogue</div>
+        <div class="wp-body">A Sheinbaum–CNTE meeting with substantive concessions is the only near-term de-escalation path. Refusal or a forced Zócalo clearance triggers immediate, severe multi-corridor retaliation.</div>
+      </div>
+      <div class="wp-card">
+        <div class="wp-num">Watchpoint 2</div>
+        <div class="wp-title">World Cup window</div>
+        <div class="wp-body">June 11 opening match (Mexico vs South Africa, Azteca) is CNTE's stated pressure point. Any mega-blockade targeting Reforma, fan zones, or AICM during match days would push overall risk to Severe.</div>
+      </div>
+      <div class="wp-card">
+        <div class="wp-num">Watchpoint 3</div>
+        <div class="wp-title">Highway & infrastructure escalation</div>
+        <div class="wp-body">Mexico-Toluca and Mexico-Querétaro blockades remain threatened but unconfirmed. Sustained execution alongside AICM access disruption would constitute a step-change in operational impact.</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="div">
+
+  <!-- CONFIDENCE -->
+  <div class="section">
+    <div class="sec-label">Confidence Assessment</div>
+    <div class="card">
+      <div class="conf-inner">
+        <div class="conf-row">
+          <span class="conf-label">Overall Confidence</span>
+          <span class="badge badge-info">High</span>
+        </div>
+        <p class="conf-body">Core findings corroborated across all three AI assessments and independently verified by OSINT — including AICM's own official communications, C5 CDMX traffic bulletins, and Reuters, El País, La Jornada, and Milenio reporting. The five-day Circuito Interior blockade pattern and June 3 SEP incident are confirmed by primary sources.</p>
+        <p class="conf-body">Residual uncertainty: CNTE's internal cohesion and strike durability beyond 7–10 days are unknown. Situation can shift within hours. Real-time monitoring of SSC CDMX, AICM official channels, and C5 CDMX alerts is essential for daily operational decisions.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>CNTE Protest Monitoring Dashboard &nbsp;·&nbsp; For internal use only</span>
+    <span>Next update: 5 June 2026</span>
+  </div>
+
+</div>
+</body>
+</html>
