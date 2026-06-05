@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mexico City — CNTE Protest Monitoring Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3f4f6;
+    --surface: #ffffff;
+    --surface2: #f9fafb;
+    --border: #e5e7eb;
+    --border2: #d1d5db;
+    --text: #111827;
+    --text-sec: #374151;
+    --text-muted: #6b7280;
+    --text-faint: #9ca3af;
+    --high: #c0392b;
+    --high-bg: rgba(192,57,43,0.08);
+    --high-border: rgba(192,57,43,0.25);
+    --elev: #b5690a;
+    --elev-bg: rgba(181,105,10,0.08);
+    --elev-border: rgba(181,105,10,0.25);
+    --info: #1a6aad;
+    --info-bg: rgba(26,106,173,0.08);
+    --info-border: rgba(26,106,173,0.25);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13.5px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 1.5rem 1rem 3rem;
+  }
+  .container { max-width: 1100px; margin: 0 auto; width: 100%; }
+
+  /* HEADER */
+  .header { border-bottom: 1px solid var(--border2); padding-bottom: 1.25rem; margin-bottom: 1.5rem; }
+  .dash-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .dash-subtitle { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+
+  /* BADGES */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 500;
+    padding: 3px 10px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  .badge-high  { background: var(--high-bg); color: var(--high); border: 1px solid var(--high-border); }
+  .badge-elev  { background: var(--elev-bg); color: var(--elev); border: 1px solid var(--elev-border); }
+  .badge-info  { background: var(--info-bg); color: var(--info); border: 1px solid var(--info-border); }
+  .badge-det   { background: rgba(192,57,43,0.06); color: #a0382c; border: 1px solid rgba(192,57,43,0.18); }
+  .badge-sdet  { background: rgba(181,105,10,0.06); color: #8a5a0a; border: 1px solid rgba(181,105,10,0.18); }
+  .badge-nochg { background: #f3f4f6; color: #374151; border: 1px solid var(--border); }
+
+  .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dot-high { background: var(--high); animation: pulse 2.2s ease-in-out infinite; }
+  .dot-elev { background: var(--elev); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+
+  /* SECTIONS */
+  .section { margin-bottom: 1.25rem; animation: fadeUp 0.35s ease both; }
+  .section:nth-child(1) { animation-delay: 0.00s; }
+  .section:nth-child(2) { animation-delay: 0.06s; }
+  .section:nth-child(3) { animation-delay: 0.12s; }
+  .section:nth-child(4) { animation-delay: 0.18s; }
+  .section:nth-child(5) { animation-delay: 0.22s; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
+
+  .sec-label {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; padding: 0 2px;
+  }
+
+  /* CARD */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+
+  /* KEY INSIGHTS */
+  .insights-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--high); border-radius: 6px;
+  }
+  .insights-status {
+    display: flex; gap: 1.5rem; align-items: center;
+    padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .insights-status-row { display: flex; align-items: center; gap: 8px; }
+  .insights-status-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+  .exec-table { width: 100%; border-collapse: collapse; }
+  .exec-table tr { border-bottom: 1px solid var(--border); }
+  .exec-table tr:last-child { border-bottom: none; }
+  .exec-table td { padding: 0.75rem 1.1rem; vertical-align: top; }
+  .exec-table td.exec-lbl {
+    width: 140px; font-weight: 600; color: var(--text-muted);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    white-space: nowrap; padding-top: 0.85rem;
+  }
+  .exec-table td.exec-content { font-size: 13px; color: var(--text-sec); line-height: 1.5; }
+  .exec-bullets { list-style: none; display: flex; flex-direction: column; gap: 4px; padding: 0; margin: 0; }
+  .exec-bullets li { padding-left: 12px; position: relative; line-height: 1.5; }
+  .exec-bullets li::before { content: "•"; position: absolute; left: 0; color: var(--text-muted); }
+
+  /* INDICATOR TABLE */
+  .ind-table { width: 100%; border-collapse: collapse; }
+  .ind-table thead tr { background: var(--surface2); border-bottom: 1px solid var(--border2); }
+  .ind-table th {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-align: left; padding: 8px 12px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .ind-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .ind-table tbody tr:last-child td { border-bottom: none; }
+  .ind-table tbody tr:hover { background: var(--surface2); }
+  .ind-name { font-weight: 500; font-size: 13px; color: var(--text); margin-bottom: 0; }
+  .ind-sub { display: none; }
+  .ind-summary { font-size: 13px; color: var(--text-sec); line-height: 1.6; }
+
+  /* WATCHPOINTS */
+  .wp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; }
+  .wp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; }
+  .wp-num { font-size: 11px; font-weight: 600; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+  .wp-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .wp-body { font-size: 12px; color: var(--text-sec); line-height: 1.6; }
+
+  /* CONFIDENCE */
+  .conf-inner { padding: 0.9rem 1.1rem; }
+  .conf-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.65rem; }
+  .conf-label { font-size: 12px; color: var(--text-muted); font-weight: 500; min-width: 130px; }
+  .conf-body { font-size: 13px; color: var(--text-sec); line-height: 1.65; }
+  .conf-body + .conf-body { margin-top: 0.5rem; }
+
+  hr.div { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+  .footer {
+    margin-top: 2rem; padding-top: 0.75rem; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-faint);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;
+  }
+
+  @media (max-width: 600px) {
+    .ind-table thead { display: none; }
+    .ind-table td { display: block; padding: 6px 12px; }
+    .ind-table tr { display: block; border-bottom: 1px solid var(--border); padding: 8px 0; }
+    .ind-table tbody tr:last-child { border-bottom: none; }
+    .wp-grid { grid-template-columns: 1fr; }
+    .insights-status { flex-direction: column; gap: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="dash-title">Mexico City — CNTE Protest Monitoring</div>
+    <div class="dash-subtitle">Updated: 5 June 2026 &nbsp;·&nbsp; Reporting period: 29 May – 5 June 2026</div>
+  </div>
+
+  <!-- KEY INSIGHTS -->
+  <div class="section">
+    <div class="sec-label">Key Insights</div>
+    <div class="insights-card">
+
+      <table class="exec-table">
+        <tr>
+          <td class="exec-lbl">Current Situation</td>
+          <td class="exec-content">
+            <ul class="exec-bullets">
+              <li><strong>Fifth consecutive day of blockades</strong> on Circuito Interior and Reforma–Chapultepec, directly impairing Torre Virreyes access. ~10,000 businesses in Centro Histórico affected.</li>
+              <li>Violence remains <strong>organised and contained to government sites</strong> — no spread to commercial zones. No major new incidents June 4–5.</li>
+              <li>AICM flights operational. Highway toll-booth occupations ongoing but with free passage permitted.</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td class="exec-lbl">Key Changes</td>
+          <td class="exec-content">
+            <ul class="exec-bullets">
+              <li><strong>Government tabled a new pension proposal on June 4</strong> (public insurer for ISSSTE individual accounts) — CNTE called a national assembly to review it but rejected it as insufficient.</li>
+              <li>Sheinbaum has ruled out a direct meeting; three rounds of Gobernación talks have ended without agreement.</li>
+              <li>Highway casetas released after June 4 actions — a minor de-escalation signal, but plantón and strike remain firmly in place.</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td class="exec-lbl">Key Implications</td>
+          <td class="exec-content">
+            <ul class="exec-bullets">
+              <li><strong>Six days to June 11</strong> — CNTE has a concrete government proposal on the table but core demands (ISSSTE repeal, 100% salary rise) remain unmet.</li>
+              <li>Staff on Reforma/Circuito Interior face <strong>continued daily disruption</strong> with no normalisation expected before the World Cup.</li>
+              <li>If the national assembly rejects the proposal outright, <strong>escalation ahead of June 11 becomes the base case</strong>.</li>
+            </ul>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <hr class="div">
+
+  <!-- INDICATOR SUMMARY -->
+  <div class="section">
+    <div class="sec-label">Indicator Summary</div>
+    <div class="card">
+      <table class="ind-table">
+        <thead>
+          <tr>
+            <th style="width:18%">Indicator</th>
+            <th style="width:10%">Status</th>
+            <th style="width:14%">Trend</th>
+            <th>Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="ind-name">CBD Operations</div>
+              <div class="ind-sub">Torre Virreyes · Reforma · Circuito Interior · Traffic</div>
+            </td>
+            <td><span class="badge badge-high"><span class="dot dot-high"></span>&nbsp;High</span></td>
+            <td><span class="badge badge-sdet">↘ Slightly Deteriorating</span></td>
+            <td class="ind-summary">Fifth consecutive day of blockades on Circuito Interior at Reforma–Chapultepec. Scope has plateaued but disruption is sustained and daily. ~10,000 businesses in Centro Histórico affected. Polanco and Santa Fe accessible with corridor friction.</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="ind-name">Airport Operations</div>
+              <div class="ind-sub">AICM flights · Terminals · Airside ops</div>
+            </td>
+            <td><span class="badge badge-elev"><span class="dot dot-elev"></span>&nbsp;Elevated</span></td>
+            <td><span class="badge badge-nochg">→ No Change</span></td>
+            <td class="ind-summary">Flights and terminals normal as of June 5. Toll-booth occupations on four access highways (México-Cuernavaca, México-Puebla, México-Pachuca, México-Toluca) permitted free passage on June 4 — no hard AICM blockade. Monitor closely ahead of June 11.</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="ind-name">Civil Unrest & Violence</div>
+              <div class="ind-sub">Clashes · Injuries · Vandalism · Safety</div>
+            </td>
+            <td><span class="badge badge-elev"><span class="dot dot-elev"></span>&nbsp;Elevated</span></td>
+            <td><span class="badge badge-sdet">↘ Slightly Deteriorating</span></td>
+            <td class="ind-summary">No major new incidents June 4–5. Peak escalation was June 1–3 (Zócalo clashes, Reforma statue burnings, SEP breach). Violence remains purposefully targeted at government sites — not commercial zones. Government has ruled out forcible clearance ahead of the World Cup.</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="ind-name">Escalation Potential</div>
+              <div class="ind-sub">Negotiations · World Cup · Strike durability</div>
+            </td>
+            <td><span class="badge badge-high"><span class="dot dot-high"></span>&nbsp;High</span></td>
+            <td><span class="badge badge-det">↘ Deteriorating</span></td>
+            <td class="ind-summary">Government tabled a new pension proposal (public insurer for ISSSTE accounts) on June 4 — CNTE called a national assembly to review but rejected it as insufficient. Three rounds of talks, zero agreements. Sheinbaum rules out direct meeting. Six days to June 11.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="div">
+
+  <!-- WATCHPOINTS -->
+  <div class="section">
+    <div class="sec-label">Forward Watchpoints — Next 7–14 Days</div>
+    <div class="wp-grid">
+      <div class="wp-card">
+        <div class="wp-num">Watchpoint 1</div>
+        <div class="wp-title">World Cup window</div>
+        <div class="wp-body">June 11 opening match (Mexico vs South Africa, Azteca) is CNTE's hard pressure deadline. Any mega-blockade targeting Reforma, fan zones, Zócalo, or AICM during match days would push overall risk to Severe. Monitor CNTE communiqués from June 8 onward for specific action plans.</div>
+      </div>
+      <div class="wp-card">
+        <div class="wp-num">Watchpoint 2</div>
+        <div class="wp-title">Highway & AICM escalation</div>
+        <div class="wp-body">Four major access highways saw toll-booth occupations on June 4 with free passage permitted. Monitor for any shift from permissive to hard blockades, or any direct action against AICM terminal access — either would constitute a step-change in operational impact.</div>
+      </div>
+      <div class="wp-card">
+        <div class="wp-num">Watchpoint 3</div>
+        <div class="wp-title">Concessions & de-escalation</div>
+        <div class="wp-body">Government tabled a new pension proposal on June 4 (public insurer for ISSSTE accounts); CNTE's national assembly is reviewing it. Any acceptance — even partial — is the primary de-escalation trigger. Outright rejection makes World Cup disruption the base case.</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="div">
+
+  <!-- CONFIDENCE -->
+  <div class="section">
+    <div class="sec-label">Confidence Assessment</div>
+    <div class="card">
+      <div class="conf-inner">
+        <div class="conf-row">
+          <span class="conf-label">Overall Confidence</span>
+          <span class="badge badge-info">High</span>
+        </div>
+        <p class="conf-body">Core findings corroborated across all three AI assessments and independently verified by OSINT — including La Jornada, N+, La Silla Rota, El Informador, and Tribuna reporting on June 4–5 developments. The recurring highway toll-booth actions, Sheinbaum's ruling out a direct meeting, and CNTE's rejection of the Gobernación proposal are all confirmed by primary Mexican sources.</p>
+        <p class="conf-body">Residual uncertainty: whether back-channel coordination between CNTE and Gobernación produces a partial agreement before June 11 remains the key unknown. Situation can shift materially within hours. Real-time monitoring of SSC CDMX, AICM official channels, and C5 CDMX alerts remains essential.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>CNTE Protest Monitoring Dashboard &nbsp;·&nbsp; For internal use only</span>
+    <span>Next update: 6 June 2026</span>
+  </div>
+
+</div>
+</body>
+</html>
