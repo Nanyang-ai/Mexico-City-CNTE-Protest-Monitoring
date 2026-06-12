@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mexico City — CNTE Protest Monitoring Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3f4f6;
+    --surface: #ffffff;
+    --surface2: #f9fafb;
+    --border: #e5e7eb;
+    --border2: #d1d5db;
+    --text: #111827;
+    --text-sec: #374151;
+    --text-muted: #6b7280;
+    --text-faint: #9ca3af;
+    --high: #c0392b;
+    --high-bg: rgba(192,57,43,0.08);
+    --high-border: rgba(192,57,43,0.25);
+    --elev: #b5690a;
+    --elev-bg: rgba(181,105,10,0.08);
+    --elev-border: rgba(181,105,10,0.25);
+    --info: #1a6aad;
+    --info-bg: rgba(26,106,173,0.08);
+    --info-border: rgba(26,106,173,0.25);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13.5px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 1.5rem 1rem 3rem;
+  }
+  .container { max-width: 1100px; margin: 0 auto; width: 100%; }
+
+  /* HEADER */
+  .header { border-bottom: 1px solid var(--border2); padding-bottom: 1.25rem; margin-bottom: 1.5rem; }
+  .dash-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .dash-subtitle { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+
+  /* BADGES */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 500;
+    padding: 3px 10px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  .badge-high  { background: var(--high-bg); color: var(--high); border: 1px solid var(--high-border); }
+  .badge-elev  { background: var(--elev-bg); color: var(--elev); border: 1px solid var(--elev-border); }
+  .badge-info  { background: var(--info-bg); color: var(--info); border: 1px solid var(--info-border); }
+  .badge-det   { background: rgba(192,57,43,0.06); color: #a0382c; border: 1px solid rgba(192,57,43,0.18); }
+  .badge-sdet  { background: rgba(181,105,10,0.06); color: #8a5a0a; border: 1px solid rgba(181,105,10,0.18); }
+  .badge-nochg { background: #f3f4f6; color: #374151; border: 1px solid var(--border); }
+  .badge-severe { background: rgba(123,29,29,0.08); color: #7b1d1d; border: 1px solid rgba(123,29,29,0.25); }
+
+  .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dot-high { background: var(--high); animation: pulse 2.2s ease-in-out infinite; }
+  .dot-elev { background: var(--elev); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+
+  /* SECTIONS */
+  .section { margin-bottom: 1.25rem; animation: fadeUp 0.35s ease both; }
+  .section:nth-child(1) { animation-delay: 0.00s; }
+  .section:nth-child(2) { animation-delay: 0.06s; }
+  .section:nth-child(3) { animation-delay: 0.12s; }
+  .section:nth-child(4) { animation-delay: 0.18s; }
+  .section:nth-child(5) { animation-delay: 0.22s; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
+
+  .sec-label {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; padding: 0 2px;
+  }
+
+  /* CARD */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+
+  /* KEY INSIGHTS */
+  .insights-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--high); border-radius: 6px;
+  }
+  .insights-status {
+    display: flex; gap: 1.5rem; align-items: center;
+    padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .insights-status-row { display: flex; align-items: center; gap: 8px; }
+  .insights-status-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+  .exec-table { width: 100%; border-collapse: collapse; }
+  .exec-table tr { border-bottom: 1px solid var(--border); }
+  .exec-table tr:last-child { border-bottom: none; }
+  .exec-table td { padding: 0.75rem 1.1rem; vertical-align: top; }
+  .exec-table td.exec-lbl {
+    width: 140px; font-weight: 600; color: var(--text-muted);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    white-space: nowrap; padding-top: 0.85rem;
+  }
+  .exec-table td.exec-content { font-size: 13px; color: var(--text-sec); line-height: 1.5; }
+  .exec-bullets { list-style: none; display: flex; flex-direction: column; gap: 4px; padding: 0; margin: 0; }
+  .exec-bullets li { padding-left: 12px; position: relative; line-height: 1.5; }
+  .exec-bullets li::before { content: "•"; position: absolute; left: 0; color: var(--text-muted); }
+
+  /* INDICATOR TABLE */
+  .ind-table { width: 100%; border-collapse: collapse; }
+  .ind-table thead tr { background: var(--surface2); border-bottom: 1px solid var(--border2); }
+  .ind-table th {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-align: left; padding: 8px 12px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .ind-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .ind-table tbody tr:last-child td { border-bottom: none; }
+  .ind-table tbody tr:hover { background: var(--surface2); }
+  .ind-name { font-weight: 500; font-size: 13px; color: var(--text); margin-bottom: 0; }
+  .ind-sub { display: none; }
+  .ind-summary { font-size: 13px; color: var(--text-sec); line-height: 1.6; }
+
+  /* WHAT TO WATCH — per indicator collapsible */
+  .ind-watch-trigger {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 999px; padding: 3px 10px;
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    cursor: pointer; font-family: var(--font);
+    transition: background 0.12s, color 0.12s;
+    margin-top: 6px;
+  }
+  .ind-watch-trigger:hover { background: var(--border); color: var(--text-sec); }
+  .ind-watch-trigger .ind-chev { font-size: 9px; transition: transform 0.2s ease; }
+  .ind-watch-trigger.open .ind-chev { transform: rotate(180deg); }
+  .ind-watch-body {
+    display: none; margin-top: 8px;
+    background: #f0f4ff; border: 1px solid #c7d4f0;
+    border-radius: 6px; padding: 0.65rem 0.9rem;
+    font-size: 12px; color: var(--text-sec); line-height: 1.6;
+  }
+  .ind-watch-body.open { display: block; }
+  .ind-watch-body strong { color: var(--text); }
+
+  /* WATCHPOINTS */
+  .wp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; }
+  .wp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; }
+  .wp-num { font-size: 11px; font-weight: 600; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+  .wp-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .wp-body { font-size: 12px; color: var(--text-sec); line-height: 1.6; }
+
+  /* CONFIDENCE */
+  .conf-inner { padding: 0.9rem 1.1rem; }
+  .conf-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.65rem; }
+  .conf-label { font-size: 12px; color: var(--text-muted); font-weight: 500; min-width: 130px; }
+  .conf-body { font-size: 13px; color: var(--text-sec); line-height: 1.65; }
+  .conf-body + .conf-body { margin-top: 0.5rem; }
+
+  hr.div { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+  .footer {
+    margin-top: 2rem; padding-top: 0.75rem; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-faint);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;
+  }
+
+  @media (max-width: 600px) {
+    .ind-table thead { display: none; }
+    .ind-table td { display: block; padding: 6px 12px; }
+    .ind-table tr { display: block; border-bottom: 1px solid var(--border); padding: 8px 0; }
+    .ind-table tbody tr:last-child { border-bottom: none; }
+    .wp-grid { grid-template-columns: 1fr; }
+    .insights-status { flex-direction: column; gap: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="dash-title">Mexico City — CNTE Protest Monitoring</div>
+    <div class="dash-subtitle">Updated: 12 June 2026 &nbsp;·&nbsp; Reporting period: 6 June – 12 June 2026</div>
+  </div>
+
+  <!-- KEY INSIGHTS -->
+  <div class="section">
+    <div class="sec-label">Key Insights</div>
+    <div class="insights-card" style="border-left-color: var(--high);">
+      <div style="display:flex; gap:1.5rem; align-items:center; padding:0.75rem 1.1rem; border-bottom:1px solid var(--border); flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:12px; color:var(--text-muted); font-weight:500;">Status</span><span class="badge badge-high"><span class="dot dot-high"></span>&nbsp;High</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:12px; color:var(--text-muted); font-weight:500;">Trend</span><span class="badge badge-simp" style="background:rgba(30,125,80,0.08);color:#1e7d50;border:1px solid rgba(30,125,80,0.25);">↗ Slightly Improving</span></div>
+      </div>
+      <table class="exec-table">
+        <tr>
+          <td class="exec-lbl">Current Situation</td>
+          <td class="exec-content">
+            <ul class="exec-bullets">
+              <li><strong>CNTE marched toward Estadio Azteca on June 11 but voluntarily withdrew</strong> without clashes when they encountered SSC police lines. World Cup opened without major protest disruption.</li>
+              <li>Plantón in Centro Histórico remains in place — now in its 11th day. Blockades on Reforma/Circuito Interior corridor continuing.</li>
+              <li>AICM flights operational throughout. No confirmed AICM access disruption at any point.</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td class="exec-lbl">Key Changes</td>
+          <td class="exec-content">
+            <ul class="exec-bullets">
+              <li>Fourth Segob negotiation round on June 11 ran for <strong>six hours — partial agreements reached but described by CNTE as insufficient</strong>. First time "agreements" has been used in this cycle.</li>
+              <li>CNTE explicitly instructed members to avoid confrontation on June 11 — no flags on poles, peaceful withdrawal. Represents a tactical de-escalation.</li>
+              <li><strong>Strike continues and plantón remains</strong> — CNTE's National Assembly confirmed no suspension pending further negotiation.</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td class="exec-lbl">Key Implications</td>
+          <td class="exec-content">
+            <ul class="exec-bullets">
+              <li>The June 11 World Cup pressure window has passed without full materialisation — <strong>overall risk downgrades from Severe to High</strong>.</li>
+              <li>Staff on Reforma/Circuito Interior still face <strong>daily disruption</strong> — plantón and strike remain active. Journey management stays in effect.</li>
+              <li>Partial agreements in Segob talks are the <strong>first genuine de-escalation signal</strong> — monitor for CNTE assembly decision on whether to accept.</li>
+            </ul>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <hr class="div">
+
+  <!-- INDICATOR SUMMARY -->
+  <div class="section">
+    <div class="sec-label">Indicator Summary</div>
+    <div class="card">
+      <table class="ind-table">
+        <thead>
+          <tr>
+            <th style="width:18%">Indicator</th>
+            <th style="width:10%">Status</th>
+            <th style="width:14%">Trend</th>
+            <th>Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="ind-name">CBD Operations</div>
+              <div class="ind-sub">Torre Virreyes · Reforma · Circuito Interior · Traffic</div>
+            </td>
+            <td><span class="badge badge-high"><span class="dot dot-high"></span>&nbsp;High</span></td>
+            <td><span class="badge badge-simp" style="background:rgba(30,125,80,0.08);color:#1e7d50;border:1px solid rgba(30,125,80,0.25);">↗ Slightly Improving</span></td>
+            <td class="ind-summary">Blockades on Circuito Interior and Reforma–Chapultepec continuing into day 11 but CNTE voluntarily withdrew from stadium perimeter June 11. No new geographic expansion. Commercial losses estimated at 405M+ pesos. Polanco and Santa Fe accessible with corridor friction.
+              <br>
+              <button class="ind-watch-trigger" aria-expanded="false">
+                👁 What to watch <span class="ind-chev">▼</span>
+              </button>
+              <div class="ind-watch-body">
+                <strong>Strike & plantón durability.</strong> Plantón is now in its 11th day with World Cup group stage matches continuing through July. Monitor for signs of participant fatigue or further state-level withdrawals. CNTE has signalled the struggle is not tied to the World Cup calendar — expect continued pressure beyond June 11.
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="ind-name">Airport Access &amp; Operations</div>
+              <div class="ind-sub">AICM flights · Terminals · Airside ops</div>
+            </td>
+            <td><span class="badge badge-elev"><span class="dot dot-elev"></span>&nbsp;Elevated</span></td>
+            <td><span class="badge badge-nochg">→ No Change</span></td>
+            <td class="ind-summary">Flights and terminals normal throughout. Section 9 threat to mobilise on AICM access roads was not executed on June 11. No confirmed AICM disruption at any point in this cycle.
+              <br>
+              <button class="ind-watch-trigger" aria-expanded="false">
+                👁 What to watch <span class="ind-chev">▼</span>
+              </button>
+              <div class="ind-watch-body">
+                <strong>AICM access during group stage.</strong> Section 9 threat was not executed on June 11 but has not been formally withdrawn. Monitor for any renewed mobilisation toward AICM access roads as the World Cup group stage continues. Any confirmed blockade of terminal access roads would immediately push this indicator to High.
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="ind-name">Civil Unrest & Violence</div>
+              <div class="ind-sub">Clashes · Injuries · Vandalism · Safety</div>
+            </td>
+            <td><span class="badge badge-elev"><span class="dot dot-elev"></span>&nbsp;Elevated</span></td>
+            <td><span class="badge badge-nochg">→ No Change</span></td>
+            <td class="ind-summary">June 11 march to Estadio Azteca was explicitly peaceful — CNTE instructed no confrontation, no flag poles, voluntary withdrawal at SSC police line. No new clashes or injuries. Violence contained to government sites throughout this cycle.
+              <br>
+              <button class="ind-watch-trigger" aria-expanded="false">
+                👁 What to watch <span class="ind-chev">▼</span>
+              </button>
+              <div class="ind-watch-body">
+                <strong>Perimeter friction during group stage.</strong> Brugada has reinforced security perimeters across the historic centre. If CNTE pushes against new boundaries during future World Cup match days, or if a forced Zócalo clearance is attempted, this indicator could escalate rapidly. Monitor SSC CDMX advisories on match days.
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="ind-name">Escalation Potential</div>
+              <div class="ind-sub">Negotiations · World Cup · Strike durability</div>
+            </td>
+            <td><span class="badge badge-high"><span class="dot dot-high"></span>&nbsp;High</span></td>
+            <td><span class="badge badge-nochg">→ No Change</span></td>
+            <td class="ind-summary">Fourth Segob round on June 11 produced partial agreements — first in this cycle — but CNTE described them as insufficient. Strike and plantón continue pending CNTE assembly review. World Cup leverage window has narrowed with opener passed; core demands (ISSSTE abrogation, 100% salary rise) remain unresolved.
+              <br>
+              <button class="ind-watch-trigger" aria-expanded="false">
+                👁 What to watch <span class="ind-chev">▼</span>
+              </button>
+              <div class="ind-watch-body">
+                <strong>CNTE assembly decision.</strong> The National Assembly is reviewing partial Segob terms — any acceptance, even partial, is the first genuine de-escalation trigger and could lead to a rapid improvement across all indicators.<br><br>
+                <strong>Next negotiation round.</strong> Watch for a fifth Segob round and whether the government escalates concessions on USICAMM dissolution or pension terms. A formal agreement suspending the strike would trigger an immediate downgrade to Elevated overall.
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="div">
+
+  <!-- CONFIDENCE -->
+  <div class="section">
+    <div class="sec-label">Confidence Assessment</div>
+    <div class="card">
+      <div class="conf-inner">
+        <div class="conf-row">
+          <span class="conf-label">Overall Confidence</span>
+          <span class="badge badge-info">High</span>
+        </div>
+        <p class="conf-body">June 11 developments confirmed by La Jornada, El Universal, Excélsior, SDP Noticias, Infobae, and Democracy Now. CNTE's voluntary withdrawal, the six-hour Segob round, and partial agreement language all corroborated across multiple primary Mexican sources. AICM non-disruption confirmed throughout reporting period.</p>
+        <p class="conf-body">Residual uncertainty: whether CNTE's National Assembly accepts partial Segob terms or rejects and escalates. Strike durability beyond the World Cup group stage is the key unknown. Monitor CNTE assembly announcements and SSC CDMX advisories.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>CNTE Protest Monitoring Dashboard &nbsp;·&nbsp; For internal use only</span>
+    <span>Next update: 13 June 2026</span>
+  </div>
+
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.ind-watch-trigger').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const body = btn.nextElementSibling;
+        const isOpen = body.classList.contains('open');
+        body.classList.toggle('open');
+        btn.classList.toggle('open');
+        btn.setAttribute('aria-expanded', String(!isOpen));
+      });
+    });
+  });
+</script>
+</body>
+</html>
